@@ -1,11 +1,14 @@
 ---
-title: Logging
+title: Logging | Microsoft Docs
 author: tdykstra
+description: Introduces the logging framework in ASP.NET Core. Includes a section for each built-in logging provider and links to some popular third-party providers.
+keywords: ASP.NET Core, logging, logging providers, Microsoft.Extensions.Logging, ILogger, ILoggerFactory, LogLevel, WithFilter, TraceSource, EventLog, EventSource, scopes
 ms.author: tdykstra
 manager: wpickett
 ms.date: 10/14/2016
 ms.topic: article
 ms.assetid: ac27ac68-d76a-4f8e-b8ab-ea045803e5f2
+ms.technology: aspnet
 ms.prod: aspnet-core
 uid: fundamentals/logging
 ---
@@ -282,13 +285,17 @@ warn: TodoApi.Controllers.TodoController[4000]
 
 ## Microsoft-supported logging providers
 
-Microsoft supports providers for the console, Debug class, Windows Event Log, .NET Framework TraceSource, and Azure App Service.
+Microsoft has created providers for the console, Debug class, Windows Event Log, .NET Framework TraceSource, and Azure App Service.
 
 ### The console provider
 
-The [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console) NuGet package sends log output to the console.
+The [Microsoft.Extensions.Logging.Console](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Console) provider package sends log output to the console.
 
-This provider defines an extension method that lets you specify filtering criteria and scopes support in configuration. When you create a new project in Visual Studio, the `AddConsole` method looks like this:
+```csharp
+loggerFactory.AddConsole()
+```
+
+[AddConsole overloads](https://docs.microsoft.com/aspnet/core/api/microsoft.extensions.logging.consoleloggerextensions) let you pass in an a minimum log level, a filter function, and a boolean that indicates whether scopes are supported.  Another option is to pass in an `IConfiguration` object, which can specify scopes support and logging levels. When you create a new project in Visual Studio, the `AddConsole` method looks like this:
 
 ```csharp
 loggerFactory.AddConsole(Configuration.GetSection("Logging"));
@@ -298,23 +305,39 @@ This code refers to the `Logging` section of the *appSettings.json* file:
 
 [!code-json[](logging/sample/src/TodoApi/appsettings.json)]
 
-These settings limit framework logs to warnings while allowing the app to log at debug level, as explained in the [Log filtering](#log-filtering) section. For more information, see [Configuration](configuration.md).
+The settings shown limit framework logs to warnings while allowing the app to log at debug level, as explained in the [Log filtering](#log-filtering) section. For more information, see [Configuration](configuration.md).
 
 ### The Debug provider
 
-The [Microsoft.Extensions.Logging.Debug](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Debug) NuGet package writes log output by using the [Debug](https://docs.microsoft.com/dotnet/core/api/system.diagnostics.debug#System_Diagnostics_Debug) class.
+The [Microsoft.Extensions.Logging.Debug](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Debug) provider package writes log output by using the [Debug](https://docs.microsoft.com/dotnet/core/api/system.diagnostics.debug#System_Diagnostics_Debug) class.
+
+```csharp
+loggerFactory.AddDebug()
+```
+
+[AddDebug overloads](https://docs.microsoft.com/aspnet/core/api/microsoft.extensions.logging.debugloggerfactoryextensions) let you pass in a minimum log level or a filter function.
 
 ### The Windows Event Log provider
 
-The [Microsoft.Extensions.Logging.EventLog](https://www.nuget.org/packages/Microsoft.Extensions.Logging.EventLog) NuGet package sends log output to the Windows Event Log.
+The [Microsoft.Extensions.Logging.EventLog](https://www.nuget.org/packages/Microsoft.Extensions.Logging.EventLog) provider package sends log output to the Windows Event Log.
+
+```csharp
+loggerFactory.AddEventLog()
+```
+
+[AddEventLog overloads](https://docs.microsoft.com/aspnet/core/api/microsoft.extensions.logging.eventloggerfactoryextensions) let you pass in `EventLogSettings` or a minimum log level.
 
 ### The TraceSource provider
 
-The [Microsoft.Extensions.Logging.TraceSource](https://www.nuget.org/packages/Microsoft.Extensions.Logging.EventLog) NuGet package uses the [System.Diagnostics.TraceSource](https://msdn.microsoft.com/library/system.diagnostics.tracesource.aspx) libraries and providers.
+The [Microsoft.Extensions.Logging.TraceSource](https://www.nuget.org/packages/Microsoft.Extensions.Logging.TraceSource) provider package uses the [System.Diagnostics.TraceSource](https://msdn.microsoft.com/library/system.diagnostics.tracesource.aspx) libraries and providers.
 
-Applications must run on the .NET Framework (rather than .NET Core) to use this provider. The provider allows you to route messages to a variety of [listeners](https://msdn.microsoft.com/library/4y5y10s7.aspx), such as the [EventLogTraceListener](https://msdn.microsoft.com/library/system.diagnostics.eventlogtracelistener.aspx) and the [EventProviderTraceListener](https://msdn.microsoft.com/library/system.diagnostics.eventing.eventprovidertracelistener.aspx) for [ETW tracing](https://msdn.microsoft.com/library/ms751538.aspx).
+```csharp
+loggerFactory.AddTraceSource(sourceSwitchName);
+```
 
-`TraceSource` logging requires the `Microsoft.Extensions.Logging.TraceSource` package and a package for each listener. The sample app for this article uses the `TextWriterTraceListener`.
+[AddTraceSource overloads](https://docs.microsoft.com/aspnet/core/api/microsoft.extensions.logging.tracesourcefactoryextensions) let you pass in a source switch and a trace listener.
+
+Applications must run on the .NET Framework (rather than .NET Core) to use this provider. The provider allows you to route messages to a variety of [listeners](https://msdn.microsoft.com/library/4y5y10s7.aspx), such as the [EventLogTraceListener](https://msdn.microsoft.com/library/system.diagnostics.eventlogtracelistener.aspx) and the [EventProviderTraceListener](https://msdn.microsoft.com/library/system.diagnostics.eventing.eventprovidertracelistener.aspx) for [ETW tracing](https://msdn.microsoft.com/library/ms751538.aspx). You'll need to install a package for each listener that you want to use. The sample app for this article uses the `TextWriterTraceListener`.
 
 The following example configures a `TraceSource` provider that logs `Warning` and higher messages to the console window.
 
@@ -330,16 +353,36 @@ TodoApi.Controllers.TodoController Warning: 4000 : GetById(0) NOT FOUND
 
 ### The Azure App Service provider
 
-Azure App Service has built-in support for writing logs to text files in an App Service app's file system and to text [blobs](https://azure.microsoft.com/en-us/documentation/articles/storage-dotnet-how-to-use-blobs/#what-is-blob-storage) in an Azure Storage account. The [Microsoft.Extensions.Logging.AzureAppServices](https://www.nuget.org/packages/Microsoft.Extensions.Logging.AzureAppServices) NuGet package is a logging provider that sends logs to either or both destinations. 
+The [Microsoft.Extensions.Logging.AzureAppServices](https://www.nuget.org/packages/Microsoft.Extensions.Logging.AzureAppServices) provider package writes logs to text files in an Azure App Service app's file system and to [blob storage](https://azure.microsoft.com/en-us/documentation/articles/storage-dotnet-how-to-use-blobs/#what-is-blob-storage) in an Azure Storage account. 
 
-To use the provider, install the provider package and call `AddAzureWebAppDiagnostics` on an `ILoggerFactory` instance. Then deploy your project to an App Service app, and configure the app for file or blob logging. An App Service app has separate on/off switches for file logging and for blob logging, and for blobs you have to specify the storage account and container name. For more information, see [How to enable diagnostic logs](https://azure.microsoft.com/en-us/documentation/articles/web-sites-enable-diagnostic-log/#enablediag). 
+```csharp
+loggerFactory.AddAzureWebAppDiagnostics();
+```
+
+An `AddAzureWebAppDiagnostics` overload lets you pass in `AzureAppServicesDiagnosticsSettings`, with which you can override default settings such as the logging output template, blob name, and file size limit.
+
+When you deploy to an App Service app, your application honors the settings in the [Diagnostic Logs](https://azure.microsoft.com/en-us/documentation/articles/web-sites-enable-diagnostic-log/#enablediag). section of the **Azure App Settings** portal blade. 
+
+![Azure logging settings](logging/_static/azure-logging-settings.png)
+
+The provider only works when your project runs in the Azure environment.  It has no effect when you run locally -- it does not write to local files or local development storage for blobs.
+
+If you enable file logging in Azure and run your app in Azure using the default provider settings, you'll find your logs in the *Log files/Application* folder, in a file named *diagnostics-yyyymmdd.txt*. If you enable blob logging in Azure, you'll find your logs in a blob named *AzureLogging{timestamp}/yyyy/mm/dd/hh/{guid}-applicationLog.txt*.
+
+If you change the Azure App Service Diagnostics settings, your app automatically switches to the new logging configuration without requiring that you restart it or redeploy. 
 
 > [!NOTE]
-> The provider only works when your project runs in the Azure environment.  It has no effect when you run locally -- it does not write to local files or local development storage for blobs.
-
-After you enable file logging and run your app in Azure to generate logs, you'll find your logs in the *Log files/Application* folder, in a file named *diagnostics-yyyymmdd.txt*. 
-
-If you enable blob logging, you'll find your logs in the container you specified, in *AzureLogging{timestamp}/yyyy/mm/dd/hh/{guid}-applicationLog.txt*.
+> There is an alternative way to set up App Service logging in your application if you don't need to change the provider default settings.  Install [Microsoft.AspNetCore.AzureAppServicesIntegration](https://www.nuget.org/packages/Microsoft.AspNetCore.AzureAppServicesIntegration/) (which includes the logging package as a dependency), and call its extension method on `WebHostBuilder` in your `Main` method.
+>
+> ```csharp
+> var host = new WebHostBuilder()
+>     .UseKestrel()    
+>     .UseAzureAppServices()    
+>     .UseStartup<Startup>()    
+>     .Build();
+> ```
+>
+>  Behind the scenes, `UseAzureAppServices` calls the logging provider extension method `AddAzureWebAppDiagnostics`.  It also calls `UseIISIntegration`.
 
 ## Third-party logging providers
 
