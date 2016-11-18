@@ -20,31 +20,26 @@ ASP.NET Core has built-in support for a logging API that works with a variety of
 
 [View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnet/fundamentals/logging/sample). The sample code is based on the [First Web API with ASP.NET Core MVC](../tutorials/first-web-api.md) sample.
 
-## The logging framework and providers
+## Logging framework and providers
 
 The logging system for ASP.NET Core is provided by several NuGet packages. The framework is in [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) and [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions/). The *Abstractions* package provides interfaces, and the main package provides default implementations of them.
 
-The two interfaces that you work with to create logs and configure logging are `ILogger` and `ILoggerFactory`.
-
-* `ILogger` methods or extension methods write logs.
-* `ILoggerFactory` methods or extension methods create `ILogger` objects and add providers. "Adding a provider" basically means specifying a destination for logs. 
-
-There's a NuGet package for each logging provider. For information about specific providers, see [Microsoft-supported logging providers](#microsoft-supported-logging-providers) and [Third-party logging providers](#third-party-logging-providers) later in this article.
+There's a separate NuGet package for each logging provider. For information about specific providers, see [Microsoft-supported logging providers](#microsoft-supported-logging-providers) and [Third-party logging providers](#third-party-logging-providers) later in this article.
 
 ## How to add providers
 
-To add a provider, install the provider's NuGet package, get an instance of `ILoggerFactory` from [DI](dependency-injection.md), and call the provider's extension method, as shown in the following example.
+To specify a destination for logs, add a provider to your application. Install the provider's NuGet package, get an instance of `ILoggerFactory` from [DI](dependency-injection.md), and call the provider's extension method, as shown in the following example.
 
 [!code-csharp[](logging/sample/src/TodoApi/Startup.cs?name=snippet_AddConsoleAndDebug&highlight=3,5-7)]
 
 `AddConsole` and `AddDebug` are extension methods on `ILoggerFactory` that are defined in the *Microsoft.Extensions.Logging.Console* and *Microsoft.Extensions.Logging.Debug* NuGet packages. Each extension method calls the `AddProvider` method, passing in an instance of the provider. 
 
 > [!NOTE]
-> The [sample application for this article](https://github.com/aspnet/Docs/tree/master/aspnet/fundamentals/logging/sample) adds logging providers in the `Configure` method of the `Startup` class. It's important to understand that no logging output will be displayed or stored anywhere until you add a provider. Until then, method calls on an `ILogger` instance will succeed, but nothing will be done with the output. If you want to get log output from code that executes earlier than the `Configure` method, add logging providers in the `Startup` class constructor instead. 
+> The [sample application for this article](https://github.com/aspnet/Docs/tree/master/aspnet/fundamentals/logging/sample) adds logging providers in the `Configure` method of the `Startup` class. It's important to understand that no logging output will be displayed or stored anywhere until you add a provider. Until then, method calls that create logs will succeed, but nothing will be done with the output. If you want to get log output from code that executes earlier than the `Configure` method, add logging providers in the `Startup` class constructor instead. 
 
 ## How to create logs
 
-To call logging methods from one of your classes, get a logger object from DI and store it in a field, then call logging methods on that logger object.
+To call logging methods from one of your classes, get an `ILogger` object from DI and store it in a field, then call logging methods on that logger object.
 
 [!code-csharp[](logging/sample/src/TodoApi/Controllers/TodoController.cs?name=snippet_LoggerDI&highlight=4,7,10)]
 
